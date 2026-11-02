@@ -1,0 +1,444 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostRow from '../components/PostRow.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import OceanBackdrop from '../components/OceanBackdrop.astro';
+import { allPosts, formatDate } from '../lib/posts';
+import { allNotes, noteExcerpt } from '../lib/notes';
+import { projects } from '../data/projects';
+import { site } from '../site.config';
+
+const posts = await allPosts();
+const latest = posts.slice(0, 3);
+const notes = (await allNotes()).slice(0, 4);
+const featured = projects.filter((project) => project.featured);
+---
+
+<BaseLayout>
+  <section class="hero hero--ocean" data-ocean-scope>
+    <OceanBackdrop />
+    <div class="hero-veil" aria-hidden="true"></div>
+
+    <div class="wrap hero-grid">
+      <div class="hero-main">
+        <p class="eyebrow hero-eyebrow">{site.role}</p>
+        <h1 class="hero-title">{site.name}<span class="hero-mark">。</span></h1>
+        <p class="hero-lede">{site.tagline}</p>
+        <div class="hero-actions">
+          <a class="btn btn--primary" href="/blog/">读文章</a>
+          <a class="btn" href="/projects/">看项目</a>
+        </div>
+      </div>
+
+      <aside class="hero-aside">
+        <dl class="meta-list">
+          {
+            site.location && (
+              <div>
+                <dt>坐标</dt>
+                <dd>{site.location}</dd>
+              </div>
+            )
+          }
+          {
+            site.now && (
+              <div>
+                <dt>现在</dt>
+                <dd>{site.now}</dd>
+              </div>
+            )
+          }
+          {
+            site.socials.map((item) => (
+              <div>
+                <dt>{item.label}</dt>
+                <dd>
+                  <a
+                    href={item.href}
+                    target={item.href.startsWith('http') ? '_blank' : undefined}
+                    rel={item.href.startsWith('http') ? 'me noopener' : undefined}
+                  >
+                    {item.handle}
+                  </a>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+        <a class="hero-ocean-link" href="/sharks/">这片海可以点，走近看 →</a>
+      </aside>
+    </div>
+
+    <button class="ocean-toggle" type="button" data-ocean-toggle>
+      <span class="ocean-toggle-glyph" data-ocean-glyph aria-hidden="true">❚❚</span>
+      <span data-ocean-label>暂停</span>
+    </button>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2><span class="num">01</span>最近写的</h2>
+        <a class="more" href="/blog/">全部 {posts.length} 篇 →</a>
+      </div>
+      <div class="post-list">
+        {latest.map((post) => <PostRow post={post} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2><span class="num">02</span>想法</h2>
+        <a class="more" href="/notes/">全部想法 →</a>
+      </div>
+      <ul class="thought-list">
+        {
+          notes.map((note) => (
+            <li>
+              <a class="thought" href={`/notes/#${note.id}`}>
+                <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+                <span class="thought-text">{noteExcerpt(note, 56)}</span>
+                <span class="thought-arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2><span class="num">03</span>在做的事</h2>
+        <a class="more" href="/projects/">全部项目 →</a>
+      </div>
+      <div class="project-grid">
+        {featured.map((project) => <ProjectCard project={project} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap wrap--narrow">
+      <div class="section-head">
+        <h2><span class="num">04</span>关于我</h2>
+        <a class="more" href="/about/">更多 →</a>
+      </div>
+      <div class="prose about-teaser">
+        <p>{site.intro}</p>
+        <p>
+          这里会放技术笔记、读书笔记和一些没什么用但想留下来的想法。欢迎通过
+          <a href={`mailto:${site.email}`}>邮件</a> 找我。
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ── 首屏：一块深色舷窗，海在背后 ─────────────────────────── */
+  .hero.hero--ocean {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    min-height: clamp(26rem, 70vh, 40rem);
+    padding-block: clamp(3rem, 8vw, 5.5rem);
+    background: #06080b;
+    border-bottom: 1px solid var(--line);
+
+    --hero-fg: #f1f4f9;
+    --hero-soft: rgba(241, 244, 249, 0.78);
+    --hero-mute: rgba(241, 244, 249, 0.5);
+    --hero-line: rgba(255, 255, 255, 0.16);
+    --hero-accent: #ff7a5c;
+  }
+
+  /* 日间用暖橘、夜间用青绿：同一个点缀色在黑底上都不会糊住 */
+  [data-theme='dark'] .hero.hero--ocean {
+    --hero-accent: #5eead4;
+  }
+
+  /* 文字区压暗、右下留亮：鱼群从亮处游过时不挡字 */
+  .hero-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        100deg,
+        rgba(4, 6, 10, 0.96) 0%,
+        rgba(4, 6, 10, 0.88) 46%,
+        rgba(4, 6, 10, 0.55) 70%,
+        rgba(4, 6, 10, 0.2) 100%
+      ),
+      linear-gradient(0deg, rgba(4, 6, 10, 0.86) 0%, rgba(4, 6, 10, 0) 40%);
+  }
+
+  .hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.75fr);
+    gap: 2rem 3rem;
+    align-items: end;
+  }
+
+  .hero-title {
+    margin-top: 0.6rem;
+    color: var(--hero-fg);
+    font-size: clamp(2.75rem, 7.5vw, 4.5rem);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    text-shadow: 0 2px 40px rgba(0, 0, 0, 0.55);
+  }
+
+  .hero-eyebrow {
+    color: var(--hero-accent);
+  }
+
+  .hero-mark {
+    color: var(--hero-accent);
+    font-weight: 400;
+  }
+
+  .hero-lede {
+    margin-top: 1.1rem;
+    max-width: 30rem;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--hero-soft);
+    text-wrap: pretty;
+    text-shadow: 0 1px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.6rem;
+  }
+
+  /* 首屏固定深色，按钮要覆盖全局的两套主题样式 */
+  .hero.hero--ocean .btn {
+    color: var(--hero-fg);
+    border-color: var(--hero-line);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+  }
+
+  .hero.hero--ocean .btn:hover {
+    color: var(--hero-accent);
+    border-color: var(--hero-accent);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .hero.hero--ocean .btn--primary {
+    color: #08090b;
+    background: var(--hero-fg);
+    border-color: var(--hero-fg);
+  }
+
+  .hero.hero--ocean .btn--primary:hover {
+    color: #06100f;
+    background: var(--hero-accent);
+    border-color: var(--hero-accent);
+    box-shadow: none;
+  }
+
+  .hero.hero--ocean .hero-aside {
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--hero-line);
+    border-radius: var(--radius);
+    background: rgba(6, 8, 11, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .meta-list {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0;
+  }
+
+  .meta-list div {
+    display: grid;
+    grid-template-columns: 3.1rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: baseline;
+  }
+
+  .meta-list dt {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--hero-mute);
+  }
+
+  .meta-list dd {
+    margin: 0;
+    font-size: 0.8375rem;
+    line-height: 1.65;
+    color: var(--hero-soft);
+  }
+
+  [data-theme='dark'] .meta-list dd {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .meta-list dd a {
+    color: var(--hero-fg);
+    border-bottom: 1px solid var(--hero-line);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .meta-list dd a:hover {
+    color: var(--hero-accent);
+    border-color: var(--hero-accent);
+  }
+
+  .hero-ocean-link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--hero-mute);
+    transition: color 0.15s ease;
+  }
+
+  .hero-ocean-link:hover {
+    color: var(--hero-accent);
+  }
+
+  .post-list {
+    margin-top: 0.25rem;
+  }
+
+  .thought-list {
+    list-style: none;
+    margin: 0.25rem 0 0;
+  }
+
+  .thought {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) 1rem;
+    align-items: baseline;
+    gap: 0.35rem 1.25rem;
+    padding: 0.8rem 0.35rem 0.8rem 0;
+    border-bottom: 1px solid var(--line);
+    transition: background-color 0.15s ease;
+  }
+
+  .thought:hover {
+    background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+  }
+
+  .thought time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .thought-text {
+    min-width: 0;
+    font-family: var(--prose-font);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--text-soft);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    transition: color 0.15s ease;
+  }
+
+  .thought:hover .thought-text {
+    color: var(--text);
+  }
+
+  .thought-arrow {
+    justify-self: end;
+    font-size: 0.8rem;
+    color: var(--accent);
+    opacity: 0;
+    transform: translateX(-0.25rem);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .thought:hover .thought-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.35rem;
+  }
+
+  .about-teaser {
+    margin-top: 1.35rem;
+  }
+
+  .about-teaser p {
+    color: var(--text-soft);
+  }
+
+  @media (max-width: 56rem) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    /* 窄屏改成竖向压暗，保证文字始终在暗区上 */
+    .hero-veil {
+      background: linear-gradient(
+        180deg,
+        rgba(4, 6, 10, 0.72) 0%,
+        rgba(4, 6, 10, 0.9) 46%,
+        rgba(4, 6, 10, 0.96) 100%
+      );
+    }
+
+    .project-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .hero.hero--ocean {
+      min-height: 0;
+      padding-block: 2.5rem 2.25rem;
+    }
+
+    /* 窄屏底部是信息卡，开关挪到右上角，避开文字和卡片 */
+    .hero.hero--ocean .ocean-toggle {
+      top: 0.7rem;
+      bottom: auto;
+    }
+
+    .hero.hero--ocean .hero-aside {
+      padding: 1rem 1.1rem;
+    }
+
+    .thought {
+      grid-template-columns: minmax(0, 1fr) 1rem;
+      gap: 0.2rem 0.75rem;
+    }
+
+    .thought time {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

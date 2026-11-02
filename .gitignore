@@ -1,0 +1,31 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+.astro/
+
+# 日志
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# 环境变量
+.env
+.env.*
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 本地预览截图（不参与部署）
+preview/
+
+
+# 本地 agent 运行目录（含凭据，绝不入库）
+.codex-home/
+
+# 不想公开的草稿（仓库是公开的）
+src/content/**/_draft-*.md

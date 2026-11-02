@@ -1,0 +1,321 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { allPosts, formatDateCN, readingTime } from '../../lib/posts';
+import { tagSlug } from '../../lib/tags';
+
+export const getStaticPaths = (async () => {
+  const posts = await allPosts();
+  return posts.map((post) => ({ params: { slug: post.id } }));
+}) satisfies GetStaticPaths;
+
+const { slug } = Astro.params;
+const posts = await allPosts();
+const index = posts.findIndex((item) => item.id === slug);
+const post = posts[index];
+
+if (!post) {
+  throw new Error(`找不到文章：${slug}`);
+}
+
+const { Content, headings } = await render(post);
+const newer = index > 0 ? posts[index - 1] : undefined;
+const older = index < posts.length - 1 ? posts[index + 1] : undefined;
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const minutes = readingTime(post.body);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedTime={post.data.pubDate}
+>
+  <article class="article">
+    <div class="wrap article-layout">
+      <div class="article-main">
+        <header class="article-head">
+          <div class="article-meta">
+            <time datetime={post.data.pubDate.toISOString()}>
+              {formatDateCN(post.data.pubDate)}
+            </time>
+            <span class="sep">·</span>
+            <span>约 {minutes} 分钟</span>
+            {
+              post.data.updatedDate && (
+                <>
+                  <span class="sep">·</span>
+                  <span>更新于 {formatDateCN(post.data.updatedDate)}</span>
+                </>
+              )
+            }
+            {post.data.draft && <span class="draft-badge">草稿</span>}
+          </div>
+
+          <h1 class="article-title">{post.data.title}</h1>
+          <p class="article-lede">{post.data.description}</p>
+
+          {
+            post.data.tags.length > 0 && (
+              <div class="article-tags">
+                {post.data.tags.map((tag) => (
+                  <a class="chip" href={`/tags/${tagSlug(tag)}/`}>
+                    {tag}
+                  </a>
+                ))}
+              </div>
+            )
+          }
+        </header>
+
+        <div class="prose article-body">
+          <Content />
+        </div>
+
+        <footer class="article-foot">
+          <div class="article-end" aria-hidden="true">
+            <span></span>
+            <span class="end-label">完</span>
+            <span></span>
+          </div>
+
+          <nav class="post-nav" aria-label="文章导航">
+            {
+              newer ? (
+                <a class="post-nav-item" href={`/blog/${newer.id}/`}>
+                  <span class="post-nav-label">← 较新一篇</span>
+                  <span class="post-nav-title">{newer.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )
+            }
+            {
+              older && (
+                <a class="post-nav-item post-nav-item--next" href={`/blog/${older.id}/`}>
+                  <span class="post-nav-label">较早一篇 →</span>
+                  <span class="post-nav-title">{older.data.title}</span>
+                </a>
+              )
+            }
+          </nav>
+        </footer>
+      </div>
+
+      {
+        toc.length > 1 && (
+          <aside class="toc" aria-label="本文目录">
+            <p class="toc-title">目录</p>
+            <ul>
+              {toc.map((heading) => (
+                <li class={heading.depth === 3 ? 'toc-item toc-item--sub' : 'toc-item'}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )
+      }
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .article {
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1rem;
+  }
+
+  .article-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  .article-main {
+    max-width: calc(var(--measure) + 1rem);
+    min-width: 0;
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    color: var(--text-mute);
+  }
+
+  .article-meta .sep {
+    opacity: 0.5;
+  }
+
+  .draft-badge {
+    padding: 0.05rem 0.35rem;
+    border: 1px dashed var(--line-strong);
+    border-radius: 3px;
+    font-size: 0.66rem;
+  }
+
+  .article-title {
+    margin-top: 0.85rem;
+    font-size: clamp(1.85rem, 4.6vw, 2.6rem);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .article-lede {
+    margin-top: 0.9rem;
+    max-width: 34rem;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text-mute);
+    text-wrap: pretty;
+  }
+
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 1.3rem;
+  }
+
+  .article-body {
+    margin-top: 2.5rem;
+    padding-top: 2.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .article-foot {
+    margin-top: 3.5rem;
+  }
+
+  .article-end {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 2.5rem;
+    color: var(--text-mute);
+  }
+
+  .article-end span:first-child,
+  .article-end span:last-child {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .end-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--text-mute);
+  }
+
+  .post-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .post-nav-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .post-nav-item:hover {
+    border-color: var(--accent);
+  }
+
+  .post-nav-item--next {
+    text-align: right;
+  }
+
+  .post-nav-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+  }
+
+  .post-nav-title {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-soft);
+  }
+
+  .post-nav-item:hover .post-nav-title {
+    color: var(--accent);
+  }
+
+  .toc {
+    position: sticky;
+    top: 6rem;
+    padding-top: 0.35rem;
+  }
+
+  .toc-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
+
+  .toc ul {
+    list-style: none;
+    margin-top: 0.75rem;
+    border-left: 1px solid var(--line);
+  }
+
+  .toc-item a {
+    display: block;
+    padding: 0.3rem 0 0.3rem 0.85rem;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-mute);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .toc-item a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .toc-item--sub a {
+    padding-left: 1.5rem;
+    font-size: 0.76rem;
+    opacity: 0.85;
+  }
+
+  @media (max-width: 60rem) {
+    .article-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toc {
+      display: none;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .post-nav {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .post-nav-item--next {
+      text-align: left;
+    }
+  }
+</style>

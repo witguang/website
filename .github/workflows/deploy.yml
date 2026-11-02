@@ -1,0 +1,51 @@
+name: 构建并发布
+
+# 推送到 main 就自动构建，把 dist/ 发到 gh-pages 分支。
+# 服务器只 pull 这个分支，不装 Node、不编译。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 也可以在 Actions 页面手动点一下重跑
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取源码
+        uses: actions/checkout@v4
+
+      - name: 装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 装依赖
+        run: npm ci
+
+      - name: 构建
+        env:
+          # 会出现在 /version.json 里，用来核对线上是哪一次提交
+          PUBLIC_BUILD_COMMIT: ${{ github.sha }}
+        run: npm run build
+
+      - name: 发布到 gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          # 保留历史，服务器上才能 git reset 回滚
+          force_orphan: false
+          enable_jekyll: false
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: 'deploy: ${{ github.sha }}'

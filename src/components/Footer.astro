@@ -1,0 +1,115 @@
+---
+import { site } from '../site.config';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <p class="footer-name">{site.name}<span class="dot">.</span></p>
+      <p class="footer-note">{site.description}</p>
+    </div>
+
+    <ul class="footer-links">
+      {
+        site.socials.map((item) => (
+          <li>
+            <a href={item.href} rel="me noopener" target={item.href.startsWith('http') ? '_blank' : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+      <li><a href="/sharks/">鲨鱼</a></li>
+      <li><a href="/rss.xml">RSS</a></li>
+    </ul>
+
+    <div class="footer-meta">
+      <span>© {year} {site.name}</span>
+      <span class="sep">·</span>
+      <span>用 Astro 构建</span>
+      <!-- 备案后在这里加：<a href="https://beian.miit.gov.cn/">京ICP备xxxxxxx号</a> -->
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: clamp(3rem, 8vw, 5rem);
+    border-top: 1px solid var(--line);
+    background: var(--surface-soft);
+    background: color-mix(in srgb, var(--surface-soft) 55%, transparent);
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) auto;
+    gap: 1.5rem 2rem;
+    padding-block: 2.25rem 1.75rem;
+  }
+
+  .footer-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .footer-name .dot {
+    color: var(--accent);
+  }
+
+  .footer-note {
+    margin-top: 0.35rem;
+    max-width: 22rem;
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    color: var(--text-mute);
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.15rem;
+    list-style: none;
+    align-content: start;
+    justify-content: flex-end;
+    font-size: 0.8125rem;
+  }
+
+  .footer-links a {
+    color: var(--text-mute);
+    transition: color 0.15s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--accent);
+  }
+
+  .footer-meta {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--text-mute);
+  }
+
+  .sep {
+    opacity: 0.5;
+  }
+
+  @media (max-width: 40rem) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-links {
+      justify-content: flex-start;
+    }
+  }
+</style>

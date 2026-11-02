@@ -1,0 +1,127 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OceanCanvas from '../components/OceanCanvas.astro';
+---
+
+<BaseLayout
+  title="一片 ASCII 海"
+  description="四条鲨鱼、几群小鱼，全部由字符绘制。移动鼠标鱼群会让开，点一下水面会有波纹。"
+>
+  <div class="wrap page-head">
+    <p class="eyebrow">Experiment</p>
+    <h1 class="page-title">一片 ASCII 海</h1>
+    <p class="page-sub">
+      四条鲨鱼、几群小鱼，全部由字符绘制。移动鼠标，鱼群会让开；点一下水面，会有波纹。
+    </p>
+  </div>
+
+  <div class="wrap">
+    <OceanCanvas height="min(68vh, 34rem)" sharks="thresher,hammerhead,mako,nurse" />
+  </div>
+
+  <div class="wrap wrap--narrow essay">
+    <h2>它是什么</h2>
+    <p>
+      来自 <a href="https://github.com/stackedlol/ascii-sharks" target="_blank" rel="noopener noreferrer">stackedlol/ascii-sharks</a>
+      —— 一个零依赖的 TypeScript 引擎，在 canvas 上把鱼和鲨鱼画成字符。它不渲染图片，只往格子里填字，
+      所以整个海洋其实是一张字符网格在逐帧重排。
+    </p>
+
+    <h2>里面在算什么</h2>
+    <p>
+      鱼群是经典的 boids 变体，每条鱼受三个力：跟邻居对齐方向、向局部中心聚拢、靠近时互相推开。
+      不同物种的权重不一样——沙丁鱼的切向力很强，会绕成一个旋转的饵球；凤尾鱼几乎只对齐，
+      所以排成整齐的带状；虾虎鱼的随机扰动极大，看上去像一盘散沙。
+    </p>
+    <p>
+      水流用一个无散度的场驱动，来源于漂移流函数的旋度。无散度意味着它只搬运、不堆积，
+      所以鱼群不会被推到某个角落挤成一团。鲨鱼会在身后投下阴影，鱼群感知到就会让开。
+    </p>
+
+    <h2>我改了什么</h2>
+    <p>
+      逻辑一行没动（那份 1500 行的源码在 <code>src/ascii-sharks/</code>），做的是接入：给它一块黑画布、
+      套上站点的等宽字体、按页面尺寸自适应，并且尊重「减少动态效果」的系统设置——那种情况下它只画一帧静帧，
+      不会一直跑动画。滚出视口时也会自动暂停。
+    </p>
+
+    <div class="credit">
+      <span>作者 stackedlol · MIT 协议</span>
+      <a href="https://github.com/stackedlol/ascii-sharks" target="_blank" rel="noopener noreferrer">查看源码 ↗</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-head {
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1.5rem;
+  }
+
+  .page-title {
+    margin-top: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
+  .page-sub {
+    margin-top: 0.7rem;
+    max-width: 34rem;
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--text-soft);
+    text-wrap: pretty;
+  }
+
+  .essay {
+    padding-block: clamp(2rem, 5vw, 3rem) 1rem;
+  }
+
+  .essay h2 {
+    margin-top: 2.2em;
+    font-size: 1.05rem;
+    letter-spacing: -0.005em;
+  }
+
+  .essay p {
+    margin-top: 0.9em;
+    font-family: var(--prose-font);
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--text-soft);
+  }
+
+  .essay a {
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  .essay a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  .credit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    color: var(--text-mute);
+  }
+
+  .credit a {
+    color: var(--text-mute);
+    text-decoration: none;
+  }
+
+  .credit a:hover {
+    color: var(--accent);
+  }
+</style>

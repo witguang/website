@@ -1,0 +1,153 @@
+---
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+const statusTone: Record<Project['status'], string> = {
+  进行中: 'active',
+  已上线: 'live',
+  维护中: 'maintain',
+  归档: 'archived',
+};
+---
+
+<article class="project-card">
+  <div class="project-top">
+    <h3 class="project-name">{project.name}</h3>
+    <span class={`status status--${statusTone[project.status]}`}>{project.status}</span>
+  </div>
+
+  <p class="project-summary">{project.summary}</p>
+
+  <ul class="project-stack">
+    {project.stack.map((item) => <li>{item}</li>)}
+  </ul>
+
+  {
+    project.links && project.links.length > 0 && (
+      <div class="project-links">
+        {project.links.map((link) => (
+          <a href={link.href} target="_blank" rel="noopener noreferrer">
+            {link.label}
+            <span aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </div>
+    )
+  }
+</article>
+
+<style>
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 1.25rem 1.3rem 1.15rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transition: border-color 0.18s ease, transform 0.18s ease;
+  }
+
+  .project-card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+  }
+
+  [data-theme='dark'] .project-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  }
+
+  .project-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .project-name {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  .status {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    opacity: 0.9;
+  }
+
+  .status--active {
+    color: var(--accent);
+  }
+
+  .status--live {
+    color: #3f7d5a;
+  }
+
+  .status--maintain {
+    color: var(--text-mute);
+  }
+
+  .status--archived {
+    color: var(--text-mute);
+    opacity: 0.6;
+  }
+
+  [data-theme='dark'] .status--live {
+    color: #7dd8a9;
+  }
+
+  .project-summary {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-soft);
+  }
+
+  .project-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: 0.2rem;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-mute);
+  }
+
+  .project-stack li {
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+
+  .project-links {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8125rem;
+  }
+
+  .project-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-mute);
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .project-links a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+</style>

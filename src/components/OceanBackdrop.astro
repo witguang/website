@@ -1,0 +1,50 @@
+---
+/**
+ * 铺满父容器的 ASCII 海，用作背景层。
+ * 父元素需要 position: relative + overflow: hidden + data-ocean-scope，
+ * 播放开关（.ocean-toggle，样式在 global.css）由调用方放在父元素里、遮罩之上。
+ */
+interface Props {
+  sharks?: string;
+  class?: string;
+}
+
+const { sharks = 'thresher,hammerhead,mako,nurse', class: className } = Astro.props;
+
+const slots = sharks
+  .split(',')
+  .map((kind) => kind.trim())
+  .filter(Boolean)
+  .map((kind, index) => ({ kind, size: Math.max(0.5, 1 - index * 0.1) }));
+---
+
+<div class="ocean-backdrop-layer">
+  <canvas
+    class={`ocean-backdrop ${className ?? ''}`}
+    data-ocean
+    data-sharks={JSON.stringify(slots)}
+    aria-hidden="true"
+  ></canvas>
+</div>
+
+<style>
+  .ocean-backdrop-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .ocean-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    font-family: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  }
+</style>
+
+<script>
+  import { mountOceans } from '../lib/ocean';
+  mountOceans();
+</script>

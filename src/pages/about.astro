@@ -1,0 +1,167 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../site.config';
+
+const channels = site.socials.filter((item) => !item.href.startsWith('mailto'));
+---
+
+<BaseLayout title="关于" description={`关于 ${site.name}，以及这个网站本身。`}>
+  <div class="wrap about">
+    <header class="about-head">
+      <p class="eyebrow">About</p>
+      <h1 class="about-title">关于</h1>
+    </header>
+
+    <div class="prose about-body">
+      <p>{site.intro}</p>
+
+      <h2>这个网站</h2>
+      <p>
+        用 <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+        构建，输出纯静态文件，托管在自己的 VPS 上，前面挂 Cloudflare。
+        没有数据库，没有后台，写完 Markdown 推上去就是一个页面。
+      </p>
+      <ul>
+        <li>文章是 Markdown，放在 <code>src/content/blog/</code></li>
+        <li>项目清单在 <code>src/data/projects.ts</code></li>
+        <li>全站的身份信息集中在 <code>src/site.config.ts</code></li>
+      </ul>
+
+      <h2>关于写作</h2>
+      <p>
+        我把这里当成草稿本而不是作品集。写下来的东西不一定对，但至少是当时想清楚过的。
+        技术笔记优先，因为这类内容最容易在平台迁移里丢失；读书笔记其次，随想最后。
+      </p>
+      <p>如果哪篇写错了，欢迎写信告诉我。</p>
+
+      <h2>关于我</h2>
+      <p>
+        职业经历没什么好列的，<a href="https://github.com/witguang" target="_blank" rel="noopener noreferrer">GitHub</a>
+        上能看出我最近在写什么。想判断我是个什么样的人，读两篇文章比读一段简介准。
+      </p>
+
+      <h2>联系</h2>
+      <p>
+        邮件最靠谱：<a href={`mailto:${site.email}`}>{site.email}</a>。其他入口：{channels.map((item, index) => (
+          <>
+            {index > 0 && '、'}
+            <a href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>
+          </>
+        ))}。
+      </p>
+    </div>
+
+    <aside class="about-meta">
+      <dl>
+        <div>
+          <dt>邮件</dt>
+          <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+        </div>
+        {
+          channels.map((item) => (
+            <div>
+              <dt>{item.label}</dt>
+              <dd>
+                <a href={item.href} target="_blank" rel="me noopener noreferrer">
+                  {item.handle}
+                </a>
+              </dd>
+            </div>
+          ))
+        }
+        <div>
+          <dt>订阅</dt>
+          <dd><a href="/rss.xml">RSS</a></dd>
+        </div>
+      </dl>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    gap: 3.5rem;
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1rem;
+    align-items: start;
+  }
+
+  .about-head {
+    grid-column: 1 / -1;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .about-title {
+    margin-top: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
+  .about-body {
+    max-width: var(--measure);
+    padding-top: 0.5rem;
+  }
+
+  .about-body h2 {
+    margin-top: 2.2em;
+  }
+
+  .about-body p {
+    color: var(--text-soft);
+  }
+
+  .about-meta {
+    position: sticky;
+    top: 6rem;
+    padding-top: 1.1rem;
+  }
+
+  .about-meta dl {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0;
+  }
+
+  .about-meta dt {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  .about-meta dd {
+    margin: 0.15rem 0 0;
+    font-size: 0.8375rem;
+    color: var(--text-soft);
+    word-break: break-all;
+  }
+
+  .about-meta dd a {
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .about-meta dd a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 60rem) {
+    .about {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .about-meta {
+      position: static;
+      padding-top: 0;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .about-meta dl {
+      grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    }
+  }
+</style>

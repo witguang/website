@@ -1,0 +1,128 @@
+---
+/**
+ * ASCII 海洋画布（独立的一块，带边框和说明）。
+ * - 引擎来自 src/ascii-sharks（MIT，见该目录 README）
+ * - 黑色画布是刻意的：上游引擎按深色背景设计
+ */
+interface Props {
+  /** 画布高度，CSS 长度 */
+  height?: string;
+  /** 鲨鱼阵容，如 "hammerhead,mako"，第一条最大，其余依次递减 */
+  sharks?: string;
+  /** 底下那行说明 + 入口链接 */
+  caption?: string;
+  href?: string;
+  class?: string;
+}
+
+const {
+  height = 'clamp(16rem, 40vh, 26rem)',
+  sharks = 'thresher,hammerhead,mako,nurse',
+  caption,
+  href,
+  class: className,
+} = Astro.props;
+
+const slots = sharks
+  .split(',')
+  .map((kind) => kind.trim())
+  .filter(Boolean)
+  .map((kind, index) => ({ kind, size: Math.max(0.5, 1 - index * 0.1) }));
+---
+
+<figure class={`ocean ${className ?? ''}`}>
+  <div class="ocean-frame" style={`--ocean-height: ${height}`} data-ocean-scope>
+    <canvas
+      class="ocean-canvas"
+      data-ocean
+      data-sharks={JSON.stringify(slots)}
+      aria-hidden="true"
+    ></canvas>
+    <span class="ocean-tag" aria-hidden="true">ascii-sharks</span>
+
+    <button class="ocean-toggle" type="button" data-ocean-toggle>
+      <span class="ocean-toggle-glyph" data-ocean-glyph aria-hidden="true">❚❚</span>
+      <span data-ocean-label>暂停</span>
+    </button>
+  </div>
+
+  {
+    (caption || href) && (
+      <figcaption class="ocean-caption">
+        <span>{caption ?? '移动鼠标，鱼群会让开；点一下水面，会有波纹。'}</span>
+        {href && <a href={href}>走近看 →</a>}
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .ocean {
+    margin: 0;
+  }
+
+  .ocean-frame {
+    position: relative;
+    height: var(--ocean-height);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 24px 60px -40px rgba(0, 0, 0, 0.55);
+  }
+
+  [data-theme='dark'] .ocean-frame {
+    border-color: #20262e;
+    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.06), 0 30px 70px -50px #000;
+  }
+
+  .ocean-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+    touch-action: manipulation;
+  }
+
+  .ocean-tag {
+    position: absolute;
+    left: 0.65rem;
+    bottom: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: rgba(230, 238, 255, 0.32);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ocean-caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    margin-top: 0.7rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--text-mute);
+  }
+
+  .ocean-caption a {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--text-mute);
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+
+  .ocean-caption a:hover {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  import { mountOceans } from '../lib/ocean';
+  mountOceans();
+</script>

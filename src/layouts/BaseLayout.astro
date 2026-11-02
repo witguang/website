@@ -1,0 +1,90 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../site.config';
+
+interface Props {
+  /** 页面标题；留空则用站点标题 */
+  title?: string;
+  description?: string;
+  /** 页面类型，用于 og:type */
+  type?: 'website' | 'article';
+  /** 文章页传入发布时间 */
+  publishedTime?: Date;
+}
+
+const {
+  title,
+  description = site.description,
+  type = 'website',
+  publishedTime,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${site.name}` : site.title;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const ogImage = new URL('/og-default.svg', site.url).href;
+---
+
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={site.title} href="/rss.xml" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" id="meta-theme-color" content="#faf8f4" />
+
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {publishedTime && (
+      <meta property="article:published_time" content={publishedTime.toISOString()} />
+    )}
+
+    <!-- 在首屏绘制前套用已选的主题（默认日间），避免闪一下再变色 -->
+    <script is:inline>
+      (() => {
+        const KEY = 'site-theme';
+        const root = document.documentElement;
+        let theme = null;
+        try {
+          theme = localStorage.getItem(KEY);
+        } catch {
+          /* 隐私模式下忽略 */
+        }
+        // 支持 ?theme=dark / ?theme=light 强制指定，方便分享与调试
+        const fromQuery = new URLSearchParams(location.search).get('theme');
+        if (fromQuery === 'light' || fromQuery === 'dark') {
+          theme = fromQuery;
+          try {
+            localStorage.setItem(KEY, fromQuery);
+          } catch {
+            /* 忽略 */
+          }
+        }
+        if (theme !== 'light' && theme !== 'dark') theme = 'light';
+        root.dataset.theme = theme;
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#07080a' : '#faf8f4');
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

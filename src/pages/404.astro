@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { allPosts } from '../lib/posts';
+import { site } from '../site.config';
+
+const posts = (await allPosts()).slice(0, 3);
+---
+
+<BaseLayout title="页面不存在" description="这个地址上没有内容。">
+  <section class="wrap notfound">
+    <p class="eyebrow eyebrow--accent">Error 404</p>
+    <h1 class="notfound-title">这个地址上没有东西。</h1>
+    <p class="notfound-text">
+      可能是链接写错了，或者那篇文章已经被我删掉。要不从这里继续：
+    </p>
+
+    <div class="notfound-links">
+      <a class="btn btn--primary" href="/">回到首页</a>
+      <a class="btn" href="/blog/">全部文章</a>
+      <a class="btn" href={`mailto:${site.email}`}>写信告诉我</a>
+    </div>
+
+    <div class="notfound-list">
+      <p class="eyebrow">最近写的</p>
+      <ul>
+        {
+          posts.map((post) => (
+            <li>
+              <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-block: clamp(3.5rem, 10vw, 7rem);
+  }
+
+  .notfound-title {
+    margin-top: 0.7rem;
+    font-size: clamp(1.75rem, 4.5vw, 2.5rem);
+    letter-spacing: -0.03em;
+  }
+
+  .notfound-text {
+    margin-top: 0.9rem;
+    max-width: 28rem;
+    color: var(--text-soft);
+  }
+
+  .notfound-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.75rem;
+  }
+
+  .notfound-list {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    max-width: 32rem;
+  }
+
+  .notfound-list ul {
+    list-style: none;
+    margin-top: 0.9rem;
+  }
+
+  .notfound-list li + li {
+    margin-top: 0.5rem;
+  }
+
+  .notfound-list a {
+    font-size: 0.9rem;
+    color: var(--text-soft);
+    border-bottom: 1px solid var(--line);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .notfound-list a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+</style>

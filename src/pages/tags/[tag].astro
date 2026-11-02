@@ -1,0 +1,174 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostRow from '../../components/PostRow.astro';
+import { allPosts, formatDate } from '../../lib/posts';
+import { allNotes, noteExcerpt } from '../../lib/notes';
+import { tagSlug } from '../../lib/tags';
+
+export const getStaticPaths = (async () => {
+  const [posts, notes] = await Promise.all([allPosts(), allNotes()]);
+  const tags = new Set([
+    ...posts.flatMap((post) => post.data.tags),
+    ...notes.flatMap((note) => note.data.tags),
+  ]);
+  return [...tags].map((tag) => ({
+    params: { tag: tagSlug(tag) },
+    props: { tag },
+  }));
+}) satisfies GetStaticPaths;
+
+const { tag } = Astro.props as { tag: string };
+const posts = (await allPosts()).filter((post) => post.data.tags.includes(tag));
+const notes = (await allNotes()).filter((note) => note.data.tags.includes(tag));
+const total = posts.length + notes.length;
+---
+
+<BaseLayout title={`标签：${tag}`} description={`所有标记为「${tag}」的文章和想法。`}>
+  <div class="wrap page-head">
+    <p class="eyebrow">Tag</p>
+    <h1 class="page-title">{tag}</h1>
+    <p class="page-sub">
+      共 {total} 条：{posts.length} 篇文章、{notes.length} 条想法 · <a href="/blog/">返回全部文章</a>
+    </p>
+  </div>
+
+  {
+    posts.length > 0 && (
+      <section class="wrap listing">
+        <h2 class="group-title">文章</h2>
+        {posts.map((post) => (
+          <PostRow post={post} />
+        ))}
+      </section>
+    )
+  }
+
+  {
+    notes.length > 0 && (
+      <section class="wrap listing listing--notes">
+        <h2 class="group-title">想法</h2>
+        <ul class="note-lines">
+          {notes.map((note) => (
+            <li>
+              <a href={`/notes/#${note.id}`}>
+                <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+                <span>{noteExcerpt(note, 70)}</span>
+                <span class="kind">{note.data.kind}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .page-head {
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-title {
+    margin-top: 0.5rem;
+    font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+    letter-spacing: -0.03em;
+  }
+
+  .page-sub {
+    margin-top: 0.6rem;
+    font-size: 0.875rem;
+    color: var(--text-mute);
+  }
+
+  .page-sub a {
+    color: var(--text-mute);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  .page-sub a:hover {
+    color: var(--accent);
+  }
+
+  .listing {
+    padding-block: 0.5rem 1rem;
+    max-width: calc(var(--measure) + var(--gutter) * 2);
+    margin-inline: auto;
+  }
+
+  .listing--notes {
+    padding-top: 0;
+  }
+
+  .group-title {
+    margin-block: 1.75rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    color: var(--text-mute);
+  }
+
+  .note-lines {
+    list-style: none;
+    margin: 0;
+  }
+
+  .note-lines li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .note-lines a {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.35rem 1rem;
+    padding: 0.8rem 0;
+    transition: background-color 0.15s ease;
+  }
+
+  .note-lines a:hover {
+    background: color-mix(in srgb, var(--surface-soft) 60%, transparent);
+  }
+
+  .note-lines time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note-lines span:nth-child(2) {
+    font-family: var(--prose-font);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--text-soft);
+  }
+
+  .note-lines a:hover span:nth-child(2) {
+    color: var(--text);
+  }
+
+  .kind {
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 40rem) {
+    .note-lines a {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .note-lines time {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

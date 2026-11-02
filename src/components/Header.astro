@@ -1,0 +1,215 @@
+---
+import { site } from '../site.config';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? path === '/' : path === href || path.startsWith(href);
+---
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/" aria-label={`${site.name} 首页`}>
+      <span class="brand-name">{site.name}</span><span class="brand-dot">.</span>
+    </a>
+
+    <nav class="nav" aria-label="主导航">
+      {
+        site.nav.map((item) => (
+          <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="theme-toggle" role="group" aria-label="日间或夜间模式">
+      <button type="button" data-theme-set="light" aria-pressed="true" title="日间模式">
+        <span class="sr-only">日间模式</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.1" />
+          <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.5 5.5l1.6 1.6M16.9 16.9l1.6 1.6M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6" />
+        </svg>
+      </button>
+      <button type="button" data-theme-set="dark" aria-pressed="false" title="夜间模式">
+        <span class="sr-only">夜间模式</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8a8.6 8.6 0 1 0 10.8 10.8Z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-height: 4rem;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: baseline;
+    font-size: 0.975rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .brand-dot {
+    color: var(--accent);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    margin-left: auto;
+  }
+
+  .nav a {
+    position: relative;
+    font-size: 0.875rem;
+    color: var(--text-mute);
+    transition: color 0.15s ease;
+  }
+
+  .nav a:hover {
+    color: var(--text);
+  }
+
+  .nav a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  .nav a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.4rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.2rem;
+    margin-left: 0.35rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-soft);
+  }
+
+  .theme-toggle button {
+    display: grid;
+    place-items: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-mute);
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+  }
+
+  .theme-toggle button:hover {
+    color: var(--text);
+  }
+
+  .theme-toggle button[aria-pressed='true'] {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 40rem) {
+    .header-inner {
+      flex-wrap: wrap;
+      gap: 0.5rem 0.9rem;
+      padding-block: 0.7rem;
+    }
+
+    .nav {
+      order: 3;
+      width: 100%;
+      margin-left: 0;
+      gap: 1.1rem;
+    }
+
+    .theme-toggle {
+      margin-left: auto;
+    }
+
+    .nav a[aria-current='page']::after {
+      bottom: -0.2rem;
+    }
+  }
+</style>
+
+<script>
+  const KEY = 'site-theme';
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-set]');
+  const meta = document.getElementById('meta-theme-color');
+
+  type Theme = 'light' | 'dark';
+
+  const apply = (theme: Theme, persist = true) => {
+    root.dataset.theme = theme;
+    if (persist) {
+      try {
+        localStorage.setItem(KEY, theme);
+      } catch {
+        /* 忽略 */
+      }
+    }
+    buttons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.themeSet === theme));
+    });
+    meta?.setAttribute('content', theme === 'dark' ? '#07080a' : '#faf8f4');
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = button.dataset.themeSet === 'dark' ? 'dark' : 'light';
+      apply(next);
+    });
+  });
+
+  // 多个标签页之间保持同步
+  window.addEventListener('storage', (event) => {
+    if (event.key === KEY && (event.newValue === 'light' || event.newValue === 'dark')) {
+      apply(event.newValue, false);
+    }
+  });
+
+  apply(root.dataset.theme === 'dark' ? 'dark' : 'light', false);
+</script>

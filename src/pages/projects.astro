@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { projects } from '../data/projects';
+
+const active = projects.filter((project) => project.status !== '归档');
+const archived = projects.filter((project) => project.status === '归档');
+---
+
+<BaseLayout title="项目" description="做过的东西：在做的、上线的、以及留在仓库里的。">
+  <div class="wrap page-head">
+    <p class="eyebrow">Projects</p>
+    <h1 class="page-title">项目</h1>
+    <p class="page-sub">一些自己写、自己用的小工具。代码大多在 GitHub 上。</p>
+  </div>
+
+  <section class="wrap section--tight">
+    <div class="project-grid">
+      {active.map((project) => <ProjectCard project={project} />)}
+    </div>
+  </section>
+
+  {
+    archived.length > 0 && (
+      <section class="wrap section--tight">
+        <div class="section-head">
+          <h2>存档</h2>
+        </div>
+        <div class="project-grid">
+          {archived.map((project) => (
+            <ProjectCard project={project} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .page-head {
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-title {
+    margin-top: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
+  .page-sub {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--text-mute);
+  }
+
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-block: 0.5rem;
+  }
+
+  @media (max-width: 56rem) {
+    .project-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

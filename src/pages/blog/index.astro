@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostRow from '../../components/PostRow.astro';
+import { allPosts, formatDateCN, groupByYear, tagCounts } from '../../lib/posts';
+import { tagSlug } from '../../lib/tags';
+
+const posts = await allPosts();
+const groups = groupByYear(posts);
+const tags = tagCounts(posts);
+const oldest = posts.at(-1);
+---
+
+<BaseLayout title="文章" description="全部文章归档，按年份排列。">
+  <div class="wrap page-head">
+    <p class="eyebrow">Archive</p>
+    <h1 class="page-title">文章</h1>
+    <p class="page-sub">
+      共 {posts.length} 篇
+      {oldest && <span>· 最早一篇写于 {formatDateCN(oldest.data.pubDate)}</span>}
+    </p>
+
+    {
+      tags.length > 0 && (
+        <div class="tag-bar">
+          <span class="tag-bar-label">标签</span>
+          {tags.map((tag) => (
+            <a class="chip" href={`/tags/${tagSlug(tag.tag)}/`}>
+              {tag.tag} <span class="tag-count">{tag.count}</span>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <div class="wrap archive">
+    {
+      groups.map((group) => (
+        <section class="year-group">
+          <h2 class="year">{group.year}</h2>
+          <div class="post-list">
+            {group.posts.map((post) => (
+              <PostRow post={post} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .page-head {
+    padding-block: clamp(2.5rem, 6vw, 4rem) 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-title {
+    margin-top: 0.5rem;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    letter-spacing: -0.03em;
+  }
+
+  .page-sub {
+    margin-top: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    color: var(--text-mute);
+  }
+
+  .tag-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.4rem;
+  }
+
+  .tag-bar-label {
+    margin-right: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+  }
+
+  .tag-count {
+    margin-left: 0.2rem;
+    opacity: 0.55;
+    font-size: 0.62rem;
+  }
+
+  .archive {
+    padding-bottom: 1rem;
+  }
+
+  .year-group {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0 2rem;
+    padding-block: 2.25rem 0.5rem;
+  }
+
+  .year {
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year::after {
+    content: '';
+    display: block;
+    width: 1.5rem;
+    height: 1px;
+    margin-top: 0.55rem;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+
+  @media (max-width: 40rem) {
+    .year-group {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+
+    .year {
+      position: static;
+    }
+  }
+</style>
