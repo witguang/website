@@ -1,5 +1,7 @@
 # 个人网站
 
+[![构建并发布](https://github.com/witguang/website/actions/workflows/deploy.yml/badge.svg)](https://github.com/witguang/website/actions/workflows/deploy.yml)
+
 Astro 静态站：主页 + 博客 + 项目 + 关于。构建产物是纯静态文件，可托管在任意静态服务器或 Nginx 上。
 
 > 日常维护（写文章、删内容、上传、回滚、排错）看 **[MAINTENANCE.md](MAINTENANCE.md)**，这份 README 只讲结构。

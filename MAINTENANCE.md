@@ -223,37 +223,24 @@ npm run preview  # 用 dist/ 起本地服务器，验证构建产物
 
 ---
 
-## 9. 版本管理（强烈建议现在就做）
+## 9. 版本管理
 
-现在这个目录**还不是 git 仓库**。内容和代码都是文件，git 就是最好的备份：
+源码在 `github.com/witguang/website`（公开仓库）。**本地仓库是唯一副本**，每次改完记得推：
 
 ```bash
-cd D:\orca\workspaces\website
-git init
 git add -A
-git commit -m "初始版本：Astro 站点 + 文章 + 想法 + ASCII 海"
+git commit -m "新增：xxx"
+git push
 ```
 
-`.gitignore` 已经配好（`node_modules/`、`dist/`、`preview/`、`.env` 都不会进去）。
+推送会同时触发构建（见第 10 节），所以 `git push` 之后等 Actions 跑完，再去服务器更新即可。
 
-推到 GitHub 私有仓库：
+`.gitignore` 保证这些东西不会进仓库：`node_modules/`、`dist/`、`preview/`、`.codex-home/`、`_draft-*.md`。
 
-```bash
-git remote add origin git@github.com:witguang/website.git
-git branch -M main
-git push -u origin main
-```
-
-以后每次改完内容：
-
-```bash
-git add -A && git commit -m "新增：xxx" && git push
-```
-
-服务器上不放源码，所以**本地仓库 = 唯一副本**，记得推。
+> 想把草稿留在本地不公开：文件名加 `_draft-` 前缀，它会被忽略。
+> 注意仓库是公开的，`src/` 下所有已提交的内容都能被看到。
 
 ---
-
 ## 10. 部署：构建在 GitHub，机器只拉取
 
 ### 10.0 为什么这么改
@@ -285,7 +272,39 @@ git add -A && git commit -m "新增：xxx" && git push
 
 > 仓库是公开的，意味着 `src/` 里的草稿也会被看到。要写不想公开的东西，文件名加 `_draft-` 前缀（已在 `.gitignore` 里）。
 
-### 10.2 新机器：一条命令
+### 10.1.1 本地推送需要走代理
+
+`git` 不读 Windows 的「Internet 选项」代理，直连 github.com 会超时。本仓库已经设好：
+
+```powershell
+git config http.proxy http://127.0.0.1:10808
+git config https.proxy http://127.0.0.1:10808
+```
+
+（代理端口换成你自己的；只影响这个仓库，不动全局配置。）
+
+### 10.2 前提：能免密登录
+
+第一次需要把本机公钥装上，三个 IP 一起做（每个 IP 输一次密码）：
+
+```powershell
+foreach ($ip in "43.128.75.128","150.158.10.211","204.44.121.119") {
+  type "$env:USERPROFILE\.ssh\id_ed25519.pub" |
+    ssh -o StrictHostKeyChecking=accept-new "root@$ip" `
+      "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys && echo OK"
+}
+```
+
+之后 `ssh root@IP "echo ok"` 不再问密码。想确认哪台通：
+
+```powershell
+foreach ($ip in "43.128.75.128","150.158.10.211","204.44.121.119") {
+  "{0,-16} {1}" -f $ip, (try { ssh -o BatchMode=yes -o ConnectTimeout=6 "root@$ip" "echo 通" 2>&1 } catch { "不通" })
+}
+```
+
+### 10.3 新机器：一条命令
+
 
 ```powershell
 ssh root@43.128.75.128 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh
@@ -300,7 +319,7 @@ ssh root@43.128.75.128 'bash -s -- --domain www.witguang.com' < deploy/setup-vps
 
 **幂等**，重复跑只会覆盖配置，不会弄丢站点。
 
-### 10.3 日常：推送 → 更新
+### 10.4 日常：推送 → 更新
 
 本地：
 
@@ -327,7 +346,7 @@ ssh root@43.128.75.128 witguang-update
 
 最后那行自检是脚本主动 `curl 127.0.0.1/version.json`——顺带验证了 nginx 是活的。
 
-### 10.4 回滚
+### 10.5 回滚
 
 ```powershell
 ssh root@43.128.75.128 witguang-update rollback
@@ -337,7 +356,7 @@ ssh root@43.128.75.128 witguang-update rollback
 
 > 真实事故里，"改 DNS 指向另一台"通常比回滚更快——见第 11 节。
 
-### 10.5 TLS：用 Cloudflare 源站证书
+### 10.6 TLS：用 Cloudflare 源站证书
 
 不依赖 ACME、不需要 DNS 指向就能签，所以**每一台机器都可以提前配好 HTTPS**，切换时不会出现证书窗口。
 
@@ -426,6 +445,17 @@ systemctl reload nginx
 先改 DNS，再删。
 
 ---
+## 11.5 排错
+
+| 现象 | 原因 | 处理 |
+| --- | --- | --- |
+| `git push` 卡住后超时 | 没走代理 | 见 10.1.1 |
+| Actions 报 `Node.js is not supported by Astro` | CI 的 Node 版本低 | 工作流里已是 22，改版本时别动 |
+| `witguang-update` 报 `couldn't find remote ref gh-pages` | 还没构建过 | 看 `gh run list`，等第一次 Actions 成功 |
+| 更新后页面没变 | Cloudflare 缓存 | 后台 Purge Everything |
+| 更新后 404 | 文章被删但文件还在 | 脚本已带 `git clean -fd`，重新跑一次 |
+| 证书报错 | 用了源站证书却直连 IP | 正常现象，走域名访问 |
+| 大陆机器拉取 GitHub 慢/失败 | 网络 | 多试几次；或临时用另一台机器 `git bundle` 过去 |
 ## 12. 备份
 
 | 备份什么 | 怎么做 |
