@@ -380,6 +380,27 @@ chmod 600 /etc/ssl/witguang/origin.key
 
 ---
 
+### 10.7 装在「已经跑着别的站」的机器上
+
+`43.128.75.128` 就是这种情况：它有 `grok / sms / todo / tools / files` 等一堆子站在跑，
+`/etc/nginx/conf.d/` 一域名一个文件，证书在 `/etc/nginx/ssl/`（Cloudflare 源站证书）。
+
+脚本默认就是**只加自己一份，不动别人**：
+
+- 配置写到 `/etc/nginx/conf.d/witguang.conf`，同名文件先备份成 `.bak-<时间戳>`
+- **不删** `sites-enabled/default`（那是其它站的兜底）
+- 站点目录 `/var/www/witguang/current` 独立
+
+只有确认是专用机器、想把默认站清掉时，才加 `--clean-box`。
+
+配置文件名冲突就换一个：
+
+```powershell
+ssh root@IP 'bash -s -- --domain www.witguang.com --name witguang-main' < deploy/setup-vps.sh
+```
+
+证书路径默认取 `/etc/nginx/ssl/<主域名>.pem` 与 `.key`，和这台机器上其它站的约定一致；
+不是这个位置就用 `--cert` / `--key` 指过去。
 ## 11. 多台机器 / 换 VPS
 
 每台机器都是独立的 git 检出，没有任何需要同步的状态（没有数据库、没有上传目录）。
