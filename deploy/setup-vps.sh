@@ -224,18 +224,32 @@ EOF
 {
   echo "# $DOMAIN —— 由 deploy/setup-vps.sh 生成，可重复执行覆盖"
   echo "# 站点目录 $DIR（git 检出 $REPO@$BRANCH）"
+
+  # 裸域：统一 301 到主域名，避免两个地址出两份内容
+  if [ -n "$APEX" ] && [ "$APEX" != "none" ] && [ "$APEX" != "$DOMAIN" ]; then
+    echo "server {"
+    echo "    listen 80;"
+    echo "    listen [::]:80;"
+    echo "    server_name $APEX;"
+    echo "    return 301 https://$DOMAIN\$request_uri;"
+    echo "}"
+    echo
+  fi
+
   echo "server {"
   echo "    listen 80;"
   echo "    listen [::]:80;"
-  echo "    server_name $DOMAIN${APEX:+ $APEX};"
+  echo "    server_name $DOMAIN;"
   if [ "$USE_TLS" = 1 ]; then
     echo "    return 301 https://$DOMAIN\$request_uri;"
   else
     echo "$BODY"
   fi
   echo "}"
+
   if [ "$USE_TLS" = 1 ]; then
-    if [ -n "$APEX" ] && [ "$APEX" != "none" ]; then
+    # 443 上的裸域也要显式接住，否则会落到别的站
+    if [ -n "$APEX" ] && [ "$APEX" != "none" ] && [ "$APEX" != "$DOMAIN" ]; then
       echo
       echo "server {"
       echo "    listen 443 ssl;"

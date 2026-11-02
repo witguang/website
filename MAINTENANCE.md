@@ -356,127 +356,130 @@ ssh root@43.128.75.128 witguang-update rollback
 
 > 真实事故里，"改 DNS 指向另一台"通常比回滚更快——见第 11 节。
 
-### 10.6 TLS：用 Cloudflare 源站证书
+### 10.6 证书与回源：源站不需要证书
 
-不依赖 ACME、不需要 DNS 指向就能签，所以**每一台机器都可以提前配好 HTTPS**，切换时不会出现证书窗口。
+最终架构是 **EdgeOne 在前面终止 TLS，回源走 HTTP**，所以源站上**没有证书**，也不用续期。
 
-1. Cloudflare → SSL/TLS → Origin Server → Create Certificate
-2. 主机名填 `witguang.com` + `*.witguang.com`，15 年
-3. 传到机器上：
-
-```bash
-mkdir -p /etc/ssl/witguang
-# 本地执行：
-scp origin.pem root@IP:/etc/ssl/witguang/origin.pem
-scp origin.key root@IP:/etc/ssl/witguang/origin.key
-# 服务器执行：
-chmod 600 /etc/ssl/witguang/origin.key
+```
+浏览器 --HTTPS--> EdgeOne(自动证书) --HTTP:80--> 源站 nginx
 ```
 
-4. 重跑 `setup-vps.sh`，自动切到 TLS 配置
-5. Cloudflare 的 SSL/TLS 模式选 **Full (strict)**，开 Always Use HTTPS
+这也是为什么之前纠结的「Cloudflare 源站证书」被弃用：EdgeOne 不信任 Cloudflare 的私有 CA。
+只有当你想绕过 CDN 直连源站时才需要证书，那时签 Let's Encrypt（DNS-01，不需要域名指向）。
 
-⚠️ 源站证书只有 Cloudflare 认，直接访问 IP 会报证书错误——这是预期的。
-
----
+> HTTP 回源意味着 EdgeOne 到新加坡源站这一段是明文。静态公开内容无所谓；
+> 以后要放私密内容，再给源站上证书并把回源协议改成 HTTPS。
 
 ### 10.7 装在「已经跑着别的站」的机器上
 
 `43.128.75.128` 就是这种情况：它有 `grok / sms / todo / tools / files` 等一堆子站在跑，
-`/etc/nginx/conf.d/` 一域名一个文件，证书在 `/etc/nginx/ssl/`（Cloudflare 源站证书）。
+`/etc/nginx/conf.d/` 一域名一个文件，证书在 `/etc/nginx/ssl/`。
 
-脚本默认就是**只加自己一份，不动别人**：
+脚本默认**只加自己一份，不动别人**：
 
 - 配置写到 `/etc/nginx/conf.d/witguang.conf`，同名文件先备份成 `.bak-<时间戳>`
 - **不删** `sites-enabled/default`（那是其它站的兜底）
 - 站点目录 `/var/www/witguang/current` 独立
 
-只有确认是专用机器、想把默认站清掉时，才加 `--clean-box`。
-
-配置文件名冲突就换一个：
-
-```powershell
-ssh root@IP 'bash -s -- --domain www.witguang.com --name witguang-main' < deploy/setup-vps.sh
-```
-
-证书路径默认取 `/etc/nginx/ssl/<主域名>.pem` 与 `.key`，和这台机器上其它站的约定一致；
-不是这个位置就用 `--cert` / `--key` 指过去。
-## 11. 多台机器 / 换 VPS
-
-每台机器都是独立的 git 检出，没有任何需要同步的状态（没有数据库、没有上传目录）。
-
-### 加一台
-
-```powershell
-# 1. 装好（一条命令）
-ssh root@150.158.10.211 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh
-
-# 2. 更新到最新
-ssh root@150.158.10.211 witguang-update
-
-# 3. 验证（不走 DNS，直接打这台机器）
-curl.exe -sS --resolve www.witguang.com:443:150.158.10.211 https://www.witguang.com/version.json
-```
-
-### 切换流量
-
-Cloudflare 里把 **`www` 和 `@` 两条 A 记录都改成新 IP**（只改 www 会让裸域指向旧机器）。
-
-出问题就把 IP 改回去，旧机器上的文件还在，等于天然回滚。
-
-### 三台一起保持最新
-
-```powershell
-foreach ($ip in "43.128.75.128","150.158.10.211","204.44.121.119") {
-  ssh root@$ip witguang-update
-}
-```
-
-或者给每台加一个定时器（可选）：
-
-```bash
-systemctl enable --now witguang-update.timer   # 每 5 分钟拉一次
-```
-
-### 中国大陆机器的注意点
-
-`150.158.10.211` 属于大陆节点，**域名解析到大陆 IP 需要 ICP 备案**，否则服务商可能封 80/443。
-没有备案就用海外那台当主站，大陆机器只做备用（切换前记得处理备案问题）。
-
-### 检查某台在跑哪一版
-
-```bash
-ssh root@IP witguang-update status
-```
-
-或远程：
-
-```bash
-curl -sS --resolve www.witguang.com:443:IP https://www.witguang.com/version.json
-```
-
-### 删除一台机器上的站点
-
-```bash
-rm -rf /var/www/witguang /etc/nginx/sites-{available,enabled}/witguang /etc/witguang
-rm -f /usr/local/bin/witguang-update /etc/systemd/system/witguang-update.*
-systemctl reload nginx
-```
-
-先改 DNS，再删。
+配置文件名冲突就换：`--name witguang-main`。
 
 ---
-## 11.5 排错
+
+## 11. 上线：EdgeOne 接入
+
+### 11.0 现状与取舍
+
+- 域名 `witguang.com` 的 NS 在 Cloudflare
+- EdgeOne 上已有站点，`dsh.witguang.com` 在跑（CNAME → `dsh.witguang.com.eo.dnse0.com`）
+- **不做 ICP 备案** → 加速区域只能选「全球可用区（不含中国大陆）」，大陆用户走海外节点
+
+不做备案的后果要清楚：**大陆用户不会就近接入国内节点**，延迟和走 Cloudflare 差不多。
+EdgeOne 在这里的价值是「稳定、有 SLA、和现有站点统一」，不是「大陆加速」。
+真要大陆加速，只能备案。
+
+### 11.1 源站
+
+| 项 | 值 |
+| --- | --- |
+| 源站地址 | `43.128.75.128`（新加坡） |
+| 端口 | `80` |
+| 回源协议 | **HTTP** |
+| 回源 Host | 跟随加速域名（`www.witguang.com`） |
+
+源站 nginx 已就绪：`www` 返回 200，裸域 301 到 www。
+
+### 11.2 在 EdgeOne 加加速域名
+
+控制台 → 站点 `witguang.com` → 域名管理 → 添加域名：
+
+- `www.witguang.com`（主站）
+- `witguang.com`（裸域，源站会 301 到 www）
+
+加速区域选「全球可用区（不含中国大陆）」，证书用「免费证书」自动签发。
+添加后会给出 CNAME，形如 `www.witguang.com.eo.dnse0.com`（以控制台显示为准）。
+
+### 11.3 DNS：CNAME 到 EdgeOne，**必须是灰云**
+
+| 类型 | 名称 | 内容 | 代理 |
+| --- | --- | --- | --- |
+| CNAME | `www` | `<控制台给的 CNAME>` | **仅 DNS（灰云）** |
+| CNAME | `@` | `<控制台给的 CNAME>` | **仅 DNS（灰云）** |
+
+为什么必须灰云：橙云会让 Cloudflare 也参与代理，变成「CF → EO → 源站」双重 CDN，
+回源 IP 混乱、缓存打架、TLS 链出错。**前面已经有 EdgeOne，Cloudflare 就只当 DNS 用。**
+
+Cloudflare 支持根域 CNAME 打平（CNAME flattening），所以 `@` 填 CNAME 没问题。
+
+### 11.4 验证
+
+```powershell
+# 1. DNS 是否指到 EdgeOne
+Resolve-DnsName www.witguang.com | Select-Object Type,NameHost,IPAddress
+
+# 2. 响应头里应该出现 EdgeOne 的标记
+curl.exe -sSI https://www.witguang.com/ | Select-String 'eo-|server'
+
+# 3. 版本是否与仓库一致
+curl.exe -sS https://www.witguang.com/version.json
+
+# 4. 裸域是否 301
+curl.exe -sSI https://witguang.com/ | Select-String 'HTTP/|location'
+```
+
+### 11.5 多台机器（暂时只有一台在线上）
+
+不备案的情况下，**大陆那台 `150.158.10.211` 不能对外提供 80/443**，只做备用。
+
+以后再上机器：
+
+```powershell
+# 用 bash 的重定向，不要用 PowerShell 管道（会多塞一个 CR 进去）
+& "C:\Program Files\Git\bin\bash.exe" -c `
+  "ssh root@新IP 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh"
+
+ssh root@新IP witguang-update
+```
+
+接到 EdgeOne 的「源站组」里，可以用规则引擎按地域分流（备案后再开国内源站）：
+
+```
+IF 客户端地理位置 = 中国大陆境内 → 源站 A（大陆）
+ELSE                              → 源站 B（新加坡）
+```
+
+### 11.6 排错
 
 | 现象 | 原因 | 处理 |
 | --- | --- | --- |
 | `git push` 卡住后超时 | 没走代理 | 见 10.1.1 |
-| Actions 报 `Node.js is not supported by Astro` | CI 的 Node 版本低 | 工作流里已是 22，改版本时别动 |
-| `witguang-update` 报 `couldn't find remote ref gh-pages` | 还没构建过 | 看 `gh run list`，等第一次 Actions 成功 |
-| 更新后页面没变 | Cloudflare 缓存 | 后台 Purge Everything |
-| 更新后 404 | 文章被删但文件还在 | 脚本已带 `git clean -fd`，重新跑一次 |
-| 证书报错 | 用了源站证书却直连 IP | 正常现象，走域名访问 |
-| 大陆机器拉取 GitHub 慢/失败 | 网络 | 多试几次；或临时用另一台机器 `git bundle` 过去 |
+| Actions 报 `Node.js is not supported by Astro` | CI 的 Node 版本低 | 工作流里已是 22，别动 |
+| `witguang-update` 报 `couldn't find remote ref gh-pages` | 还没构建过 | `gh run list` 等第一次成功 |
+| 访问域名 418 | 请求没匹配到加速域名 | 检查 EO 里域名状态、CNAME 是否正确 |
+| 访问域名 404 但源站正常 | 回源 Host 不对 | 回源 Host 设为「跟随加速域名」 |
+| 访问域名 5xx | 源站 80 不通 | `ssh root@IP curl -I -H 'Host: www.witguang.com' http://127.0.0.1/` |
+| 证书报错 | 直连了源站 IP | 正常，源站没证书；走域名 |
+| 更新后页面没变 | CDN 缓存 | EO 控制台刷新缓存 |
+| 大陆机器拉取 GitHub 慢 | 网络 | 多试；或用另一台 `git bundle` 过去 |
 ## 12. 备份
 
 | 备份什么 | 怎么做 |

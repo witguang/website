@@ -108,18 +108,20 @@ draft: false
 本地 git push → GitHub Actions 构建 → 推到 gh-pages 分支
                                           ↓
                               VPS: witguang-update（git pull）
+                                          ↓
+                             EdgeOne 回源（HTTP:80，自动证书）
 ```
 
 | 动作 | 命令 |
 | --- | --- |
-| 新机器初始化（装 nginx + 建检出 + 写配置） | `ssh root@IP 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh` |
+| 新机器初始化 | `bash -c "ssh root@IP 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh"` |
 | 日常更新 | `ssh root@IP witguang-update` |
 | 回滚 | `ssh root@IP witguang-update rollback` |
 | 看当前版本 | `ssh root@IP witguang-update status` |
 
 - 工作流：`.github/workflows/deploy.yml`（push 到 `main` 触发）
-- 构建指纹：`/version.json` 里有 `commit` 和 `builtAt`，用来核对线上是哪一版
-- TLS 用 Cloudflare 源站证书（15 年，可提前铺到每台机器，切换无证书窗口）
-- 站点目录就是一个 git 检出，删掉重来也只要两分钟
+- 构建指纹：`/version.json` 有 `commit` 和 `builtAt`，核对线上是哪一版
+- 源站只监听 80，TLS 由 EdgeOne 终止，**服务器上不需要证书**
+- 裸域 301 到 `www`，canonical 统一
 
-多机、换 DNS、备案注意事项见 [MAINTENANCE.md](MAINTENANCE.md) 第 10、11 节。
+EdgeOne 接入、DNS 该怎么填、排错都在 [MAINTENANCE.md](MAINTENANCE.md) 第 10、11 节。
