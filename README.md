@@ -105,17 +105,15 @@ draft: false
 构建在 GitHub 上做，机器只负责拉取——VPS 不装 Node、不编译。
 
 ```
-本地 git push → GitHub Actions 构建 → 推到 gh-pages 分支
-                                          ↓
-                              VPS: witguang-update（git pull）
-                                          ↓
-                             EdgeOne 回源（HTTP:80，自动证书）
+git push → Actions 构建 → gh-pages 分支 → 自动 ssh 到 VPS 拉取 → EdgeOne 回源
 ```
+
+**改完只要 `git push`，约 1 分钟上线。**
 
 | 动作 | 命令 |
 | --- | --- |
 | 新机器初始化 | `bash -c "ssh root@IP 'bash -s -- --domain www.witguang.com' < deploy/setup-vps.sh"` |
-| 日常更新 | `ssh root@IP witguang-update` |
+| 日常更新 | 不用做，git push 自动完成（手动兜底：`ssh root@IP witguang-update`） |
 | 回滚 | `ssh root@IP witguang-update rollback` |
 | 看当前版本 | `ssh root@IP witguang-update status` |
 

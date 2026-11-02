@@ -246,9 +246,13 @@ git push
 ### 10.0 为什么这么改
 
 ```
-本地 git push  →  GitHub Actions 构建  →  产出推到 gh-pages 分支
-                                              ↓
-                                     VPS: witguang-update（git pull）
+本地 git push
+      ↓
+GitHub Actions 构建 ──→ 推到 gh-pages 分支
+      ↓
+自动 ssh 到 VPS 执行 witguang-update
+      ↓
+线上生效（约 1 分钟）
 ```
 
 好处：
@@ -319,9 +323,7 @@ ssh root@43.128.75.128 'bash -s -- --domain www.witguang.com' < deploy/setup-vps
 
 **幂等**，重复跑只会覆盖配置，不会弄丢站点。
 
-### 10.4 日常：推送 → 更新
-
-本地：
+### 10.4 日常：只有 git push
 
 ```powershell
 git add -A
@@ -329,23 +331,48 @@ git commit -m "新增：xxx"
 git push
 ```
 
-等 Actions 跑完（约 30 秒，`gh run watch` 可以盯着），然后在任意一台上：
+剩下的全自动：
+
+```
+push → GitHub Actions 构建 → 推到 gh-pages → ssh 到 VPS 执行 witguang-update → 线上生效
+```
+
+大约 1 分钟。看进度：`gh run list`，或者仓库 Actions 页面。
+
+部署用的密钥在 GitHub Secrets 里（`VPS_SSH_KEY` / `VPS_KNOWN_HOSTS`），
+服务器上那一条 `authorized_keys` 带了 **forced command**，只能执行 `witguang-update`，
+就算私钥泄露也拿不到 shell。
+
+**手动兜底**（Actions 挂了或想即刻生效）：
 
 ```powershell
 ssh root@43.128.75.128 witguang-update
 ```
 
-输出：
+**不想自动部署**：把 `.github/workflows/deploy.yml` 里的 `deploy` job 删掉，回到纯手动。
 
+### 10.4.1 改内容的三个位置
+
+| 想改 | 文件 |
+| --- | --- |
+| 文章 | `src/content/blog/<slug>.md`（文件名就是 URL） |
+| 想法 | `src/content/notes/<任意名>.md` |
+| 名字/简介/社交链接/导航 | `src/site.config.ts` |
+| 项目 | `src/data/projects.ts` |
+
+文章 frontmatter（`pubDate` 必填，`draft: true` 不会发布）：
+
+```yaml
+---
+title: 标题
+description: 一句话摘要，列表页和 RSS 都用它
+pubDate: 2026-11-05
+tags: ['Astro', '前端']
+draft: false
+---
 ```
-→ 拉取 witguang/website@gh-pages
-✓ 已更新到 3f9a1c2
-  deploy: <sha>
-  自检 {"site":"witguang","builtAt":"...","commit":"3f9a1c2"}
-```
 
-最后那行自检是脚本主动 `curl 127.0.0.1/version.json`——顺带验证了 nginx 是活的。
-
+改完先在本地看一眼：`npm run dev` → http://localhost:4321
 ### 10.5 回滚
 
 ```powershell
