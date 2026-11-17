@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>如何新增，删除或修改内容 · witguang</title><meta name="description" content="这个站没有后台，新增、修改、删除都落在一个 Markdown 文件上。把流程写下来，省得每次都在脑子里重新推一遍。"><link rel="canonical" href="https://www.witguang.com/blog/edit-posts-without-cms/"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="alternate" type="application/rss+xml" title="witguang · 个人网站" href="/rss.xml"><meta name="generator" content="Astro v7.4.4"><meta name="theme-color" id="meta-theme-color" content="#faf8f4"><meta property="og:type" content="article"><meta property="og:title" content="如何新增，删除或修改内容 · witguang"><meta property="og:description" content="这个站没有后台，新增、修改、删除都落在一个 Markdown 文件上。把流程写下来，省得每次都在脑子里重新推一遍。"><meta property="og:url" content="https://www.witguang.com/blog/edit-posts-without-cms/"><meta property="og:site_name" content="witguang"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://www.witguang.com/og-default.svg"><meta name="twitter:card" content="summary_large_image"><meta property="article:published_time" content="2026-11-17T00:00:00.000Z"><!-- 在首屏绘制前套用已选的主题（默认日间），避免闪一下再变色 --><script>
+      (() => {
+        const KEY = 'site-theme';
+        const root = document.documentElement;
+        let theme = null;
+        try {
+          theme = localStorage.getItem(KEY);
+        } catch {
+          /* 隐私模式下忽略 */
+        }
+        // 支持 ?theme=dark / ?theme=light 强制指定，方便分享与调试
+        const fromQuery = new URLSearchParams(location.search).get('theme');
+        if (fromQuery === 'light' || fromQuery === 'dark') {
+          theme = fromQuery;
+          try {
+            localStorage.setItem(KEY, fromQuery);
+          } catch {
+            /* 忽略 */
+          }
+        }
+        if (theme !== 'light' && theme !== 'dark') theme = 'light';
+        root.dataset.theme = theme;
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#07080a' : '#faf8f4');
+      })();
+    </script><link rel="stylesheet" href="/_astro/BaseLayout.H4CDztmP.css"><style>.article[data-astro-cid-jo55ryrt]{padding-block:clamp(2.5rem,6vw,4rem) 1rem}.article-layout[data-astro-cid-jo55ryrt]{grid-template-columns:minmax(0,1fr) 13rem;align-items:start;gap:3.5rem;display:grid}.article-main[data-astro-cid-jo55ryrt]{max-width:calc(var(--measure) + 1rem);min-width:0}.article-meta[data-astro-cid-jo55ryrt]{font-family:var(--font-mono);letter-spacing:.03em;color:var(--text-mute);flex-wrap:wrap;align-items:center;gap:.45rem;font-size:.72rem;display:flex}.article-meta[data-astro-cid-jo55ryrt] .sep[data-astro-cid-jo55ryrt]{opacity:.5}.draft-badge[data-astro-cid-jo55ryrt]{border:1px dashed var(--line-strong);border-radius:3px;padding:.05rem .35rem;font-size:.66rem}.article-title[data-astro-cid-jo55ryrt]{letter-spacing:-.03em;margin-top:.85rem;font-size:clamp(1.85rem,4.6vw,2.6rem);line-height:1.2}.article-lede[data-astro-cid-jo55ryrt]{max-width:34rem;color:var(--text-mute);text-wrap:pretty;margin-top:.9rem;font-size:1rem;line-height:1.75}.article-tags[data-astro-cid-jo55ryrt]{flex-wrap:wrap;gap:.35rem;margin-top:1.3rem;display:flex}.article-body[data-astro-cid-jo55ryrt]{border-top:1px solid var(--line);margin-top:2.5rem;padding-top:2.25rem}.article-foot[data-astro-cid-jo55ryrt]{margin-top:3.5rem}.article-end[data-astro-cid-jo55ryrt]{color:var(--text-mute);align-items:center;gap:.9rem;margin-bottom:2.5rem;display:flex}.article-end[data-astro-cid-jo55ryrt] span[data-astro-cid-jo55ryrt]:first-child,.article-end[data-astro-cid-jo55ryrt] span[data-astro-cid-jo55ryrt]:last-child{background:var(--line);flex:1;height:1px}.end-label[data-astro-cid-jo55ryrt]{font-family:var(--font-mono);letter-spacing:.3em;color:var(--text-mute);font-size:.7rem}.post-nav[data-astro-cid-jo55ryrt]{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;display:grid}.post-nav-item[data-astro-cid-jo55ryrt]{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);flex-direction:column;gap:.3rem;padding:.95rem 1rem;transition:border-color .15s,transform .15s;display:flex}.post-nav-item[data-astro-cid-jo55ryrt]:hover{border-color:var(--accent)}.post-nav-item--next[data-astro-cid-jo55ryrt]{text-align:right}.post-nav-label[data-astro-cid-jo55ryrt]{font-family:var(--font-mono);letter-spacing:.06em;color:var(--text-mute);font-size:.68rem}.post-nav-title[data-astro-cid-jo55ryrt]{color:var(--text-soft);font-size:.9rem;line-height:1.5}.post-nav-item[data-astro-cid-jo55ryrt]:hover .post-nav-title[data-astro-cid-jo55ryrt]{color:var(--accent)}.toc[data-astro-cid-jo55ryrt]{padding-top:.35rem;position:sticky;top:6rem}.toc-title[data-astro-cid-jo55ryrt]{font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-mute);font-size:.7rem}.toc[data-astro-cid-jo55ryrt] ul[data-astro-cid-jo55ryrt]{border-left:1px solid var(--line);margin-top:.75rem;list-style:none}.toc-item[data-astro-cid-jo55ryrt] a[data-astro-cid-jo55ryrt]{color:var(--text-mute);border-left:1px solid #0000;margin-left:-1px;padding:.3rem 0 .3rem .85rem;font-size:.8rem;line-height:1.5;transition:color .15s,border-color .15s;display:block}.toc-item[data-astro-cid-jo55ryrt] a[data-astro-cid-jo55ryrt]:hover{color:var(--accent);border-color:var(--accent)}.toc-item--sub[data-astro-cid-jo55ryrt] a[data-astro-cid-jo55ryrt]{opacity:.85;padding-left:1.5rem;font-size:.76rem}@media (width<=60rem){.article-layout[data-astro-cid-jo55ryrt]{grid-template-columns:minmax(0,1fr)}.toc[data-astro-cid-jo55ryrt]{display:none}}@media (width<=40rem){.post-nav[data-astro-cid-jo55ryrt]{grid-template-columns:minmax(0,1fr)}.post-nav-item--next[data-astro-cid-jo55ryrt]{text-align:left}}
+</style></head><body><a class="skip-link" href="#main">跳到正文</a><header class="site-header" data-astro-cid-nen7h5rs><div class="wrap header-inner" data-astro-cid-nen7h5rs><a class="brand" href="/" aria-label="witguang 首页" data-astro-cid-nen7h5rs><span class="brand-name" data-astro-cid-nen7h5rs>witguang</span><span class="brand-dot" data-astro-cid-nen7h5rs>.</span></a><nav class="nav" aria-label="主导航" data-astro-cid-nen7h5rs><a href="/blog/" aria-current="page" data-astro-cid-nen7h5rs>文章</a><a href="/notes/" data-astro-cid-nen7h5rs>想法</a><a href="/projects/" data-astro-cid-nen7h5rs>项目</a><a href="/about/" data-astro-cid-nen7h5rs>关于</a></nav><div class="theme-toggle" role="group" aria-label="日间或夜间模式" data-astro-cid-nen7h5rs><button type="button" data-theme-set="light" aria-pressed="true" title="日间模式" data-astro-cid-nen7h5rs><span class="sr-only" data-astro-cid-nen7h5rs>日间模式</span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" data-astro-cid-nen7h5rs><circle cx="12" cy="12" r="4.1" data-astro-cid-nen7h5rs></circle><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.5 5.5l1.6 1.6M16.9 16.9l1.6 1.6M18.5 5.5l-1.6 1.6M7.1 16.9l-1.6 1.6" data-astro-cid-nen7h5rs></path></svg></button><button type="button" data-theme-set="dark" aria-pressed="false" title="夜间模式" data-astro-cid-nen7h5rs><span class="sr-only" data-astro-cid-nen7h5rs>夜间模式</span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true" data-astro-cid-nen7h5rs><path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8a8.6 8.6 0 1 0 10.8 10.8Z" data-astro-cid-nen7h5rs></path></svg></button></div></div></header><script type="module">var e=`site-theme`,t=document.documentElement,n=document.querySelectorAll(`[data-theme-set]`),r=document.getElementById(`meta-theme-color`),i=(i,a=!0)=>{if(t.dataset.theme=i,a)try{localStorage.setItem(e,i)}catch{}n.forEach(e=>{e.setAttribute(`aria-pressed`,String(e.dataset.themeSet===i))}),r?.setAttribute(`content`,i===`dark`?`#07080a`:`#faf8f4`)};n.forEach(e=>{e.addEventListener(`click`,()=>{i(e.dataset.themeSet===`dark`?`dark`:`light`)})}),window.addEventListener(`storage`,t=>{t.key===e&&(t.newValue===`light`||t.newValue===`dark`)&&i(t.newValue,!1)}),i(t.dataset.theme===`dark`?`dark`:`light`,!1);</script><main id="main"><article class="article" data-astro-cid-jo55ryrt><div class="wrap article-layout" data-astro-cid-jo55ryrt><div class="article-main" data-astro-cid-jo55ryrt><header class="article-head" data-astro-cid-jo55ryrt><div class="article-meta" data-astro-cid-jo55ryrt><time datetime="2026-11-17T00:00:00.000Z" data-astro-cid-jo55ryrt>2026 年 11 月 17 日</time><span class="sep" data-astro-cid-jo55ryrt>·</span><span data-astro-cid-jo55ryrt>约 3 分钟</span></div><h1 class="article-title" data-astro-cid-jo55ryrt>如何新增，删除或修改内容</h1><p class="article-lede" data-astro-cid-jo55ryrt>这个站没有后台，新增、修改、删除都落在一个 Markdown 文件上。把流程写下来，省得每次都在脑子里重新推一遍。</p><div class="article-tags" data-astro-cid-jo55ryrt><a class="chip" href="/tags/writing/" data-astro-cid-jo55ryrt>写作</a><a class="chip" href="/tags/astro/" data-astro-cid-jo55ryrt>Astro</a></div></header><div class="prose article-body" data-astro-cid-jo55ryrt><p>本网站完全是ai构建，当我想要新增，删除或修改内容时，我不知道具体流程。因此，身为懒人的我，让ai帮我写一篇文章，教我如何操作。这真是懒人福利。</p>
+<h2 id="文件在哪">文件在哪</h2>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>博客文章</td>
+<td><code>src/content/blog/</code></td>
+</tr>
+<tr>
+<td>短想法</td>
+<td><code>src/content/notes/</code></td>
+</tr>
+<tr>
+<td>文章图片</td>
+<td><code>public/images/</code></td>
+</tr>
+</tbody>
+</table>
+<p>一篇文章一个 <code>.md</code> 文件，文件名就是网址。<code>reading-slowly.md</code> 对应的地址是 <code>/blog/reading-slowly/</code>，所以<strong>改文件名等于改网址</strong>，旧链接会直接 404。想改标题就改 frontmatter 里的 <code>title</code>，别动文件名。</p>
+<h2 id="新增一篇">新增一篇</h2>
+<p>在 <code>src/content/blog/</code> 下新建文件，开头写 frontmatter：</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="background-color:#fff;--shiki-dark-bg:#22272e;color:#24292e;--shiki-dark:#adbac7; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#6CB6FF;--shiki-dark-font-weight:bold">---</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">title: 文章标题</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">description: 一句话摘要，列表和搜索结果里会显示</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">pubDate: 2026-11-17</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">tags: ['写作', '方法']</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">draft: false</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-light-font-weight:bold;--shiki-dark:#6CB6FF;--shiki-dark-font-weight:bold">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#ADBAC7">正文……</span></span></code></pre>
+<p>字段由 <code>src/content.config.ts</code> 校验，写错类型构建会直接失败，倒也不用担心文章悄悄带着坏数据上线。三个最常错的点：</p>
+<ul>
+<li><code>pubDate</code> 必须是 <code>2026-11-17</code> 这种格式，写成 <code>2026/11/17</code> 会报类型错误。</li>
+<li>YAML 缩进只能用空格，不能用 Tab。</li>
+<li>冒号必须是半角 <code>:</code>，中文冒号会让整个 frontmatter 解析失败。</li>
+</ul>
+<p>图片放进 <code>public/images/</code>，正文里用 <code>/images/xxx.png</code> 引用。这个目录不存在就新建一个，构建时会原样复制到输出目录。</p>
+<p>写到一半的东西，就加一行 <code>draft: true</code>。草稿只在本地 <code>npm run dev</code> 时可见，构建时会被排除，不会出现在列表、RSS 和站内搜索里。</p>
+<h2 id="修改一篇">修改一篇</h2>
+<p>打开对应的文件改文字，然后提交。就这么简单。</p>
+<p>只有一件事要注意：<strong>别顺手改 <code>pubDate</code></strong>。列表按它倒序排，改一次，旧文章就会跳到最前面，像刚发的一样。修错别字就只改错别字。</p>
+<p>如果确实有实质更新，加一行 <code>updatedDate: 2026-11-17</code>，文章页会显示「更新于」，比篡改发布日期诚实，也更符合读者预期。</p>
+<p>还有一种需求是「先下线，但不想删」。把 <code>draft</code> 改成 <code>true</code> 即可：文件还在，本地还能打开，线上那条链接和列表项会一起消失。</p>
+<h2 id="删除一篇">删除一篇</h2>
+<p>删掉 <code>src/content/blog/</code> 里那个 <code>.md</code>，再去 <code>public/images/</code> 清掉只被它引用的图片。</p>
+<p>删除是这里唯一不可逆的操作，两个副作用要提前想清楚：</p>
+<ol>
+<li>旧网址会变成 404。别人引用过它、搜索引擎收录过它，链接就断了。</li>
+<li>如果别的文章里还链向它，构建不会报错——Static 站不做全站链接检查——上线后才会发现死链。</li>
+</ol>
+<p>所以真正想「撤回」而不想「销毁」时，我优先用 <code>draft: true</code>。如果内容是彻底过时了，但那个链接还有人访问，可以留一篇文章说明「这篇已合并到某处」，把旧地址当作一个路标，而不是直接拆掉。</p>
+<h2 id="发布">发布</h2>
+<p>本地先看一遍：</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="background-color:#fff;--shiki-dark-bg:#22272e;color:#24292e;--shiki-dark:#adbac7; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#F69D50">npm</span><span style="color:#032F62;--shiki-dark:#96D0FF"> run</span><span style="color:#032F62;--shiki-dark:#96D0FF"> dev</span><span style="color:#6A737D;--shiki-dark:#768390">      # 浏览器里点一遍文章、标签、RSS</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#F69D50">npm</span><span style="color:#032F62;--shiki-dark:#96D0FF"> run</span><span style="color:#032F62;--shiki-dark:#96D0FF"> build</span><span style="color:#6A737D;--shiki-dark:#768390">    # 有报错会打印到文件和行号</span></span></code></pre>
+<p>确认没问题就提交：</p>
+<pre class="astro-code astro-code-themes github-light github-dark-dimmed" style="background-color:#fff;--shiki-dark-bg:#22272e;color:#24292e;--shiki-dark:#adbac7; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#F69D50">git</span><span style="color:#032F62;--shiki-dark:#96D0FF"> add</span><span style="color:#032F62;--shiki-dark:#96D0FF"> src/content/blog/</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#F69D50">git</span><span style="color:#032F62;--shiki-dark:#96D0FF"> commit</span><span style="color:#005CC5;--shiki-dark:#6CB6FF"> -m</span><span style="color:#032F62;--shiki-dark:#96D0FF"> "新增：如何新增，删除或修改内容"</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#F69D50">git</span><span style="color:#032F62;--shiki-dark:#96D0FF"> push</span></span></code></pre>
+<p>推送后由 GitHub Actions 构建，大约一分钟上线。构建失败会停在 Actions 页面，线上仍是上一版，不会出现半截的站点。</p>
+<h2 id="为什么不做后台">为什么不做后台</h2>
+<p>后台最诱人的地方是「所见即所得」，但代价是数据库、登录、权限、备份、依赖升级，还有半夜被告知插件有漏洞的可能性。这些成本平时看不见，等到某天不想写了，它们会一起出现。</p>
+<p>用文件也有代价：没有自动保存，没有草稿箱，手机上改文章很别扭。所以我把草稿箱换成了 <code>draft</code> 字段，把版本历史交给了 git——写坏了就回滚，比任何「撤销」按钮都彻底。</p>
+<p>工具应该让人忘掉工具本身。对我来说，一个 Markdown 文件加一条命令，已经足够让我把注意力留在文字上。这大概就是我能给「顺手」下的最好定义。</p>
+</div><footer class="article-foot" data-astro-cid-jo55ryrt><div class="article-end" aria-hidden="true" data-astro-cid-jo55ryrt><span data-astro-cid-jo55ryrt></span><span class="end-label" data-astro-cid-jo55ryrt>完</span><span data-astro-cid-jo55ryrt></span></div><nav class="post-nav" aria-label="文章导航" data-astro-cid-jo55ryrt><span data-astro-cid-jo55ryrt></span><a class="post-nav-item post-nav-item--next" href="/blog/why-own-website/" data-astro-cid-jo55ryrt><span class="post-nav-label" data-astro-cid-jo55ryrt>较早一篇 →</span><span class="post-nav-title" data-astro-cid-jo55ryrt>为什么我还要写一个自己的网站</span></a></nav></footer></div><aside class="toc" aria-label="本文目录" data-astro-cid-jo55ryrt><p class="toc-title" data-astro-cid-jo55ryrt>目录</p><ul data-astro-cid-jo55ryrt><li class="toc-item" data-astro-cid-jo55ryrt><a href="#文件在哪" data-astro-cid-jo55ryrt>文件在哪</a></li><li class="toc-item" data-astro-cid-jo55ryrt><a href="#新增一篇" data-astro-cid-jo55ryrt>新增一篇</a></li><li class="toc-item" data-astro-cid-jo55ryrt><a href="#修改一篇" data-astro-cid-jo55ryrt>修改一篇</a></li><li class="toc-item" data-astro-cid-jo55ryrt><a href="#删除一篇" data-astro-cid-jo55ryrt>删除一篇</a></li><li class="toc-item" data-astro-cid-jo55ryrt><a href="#发布" data-astro-cid-jo55ryrt>发布</a></li><li class="toc-item" data-astro-cid-jo55ryrt><a href="#为什么不做后台" data-astro-cid-jo55ryrt>为什么不做后台</a></li></ul></aside></div></article></main><footer class="site-footer" data-astro-cid-jo6i4kqk><div class="wrap footer-inner" data-astro-cid-jo6i4kqk><div class="footer-brand" data-astro-cid-jo6i4kqk><p class="footer-name" data-astro-cid-jo6i4kqk>witguang<span class="dot" data-astro-cid-jo6i4kqk>.</span></p><p class="footer-note" data-astro-cid-jo6i4kqk>witguang 的个人网站，记录技术笔记、读书笔记和一些日常想法。</p></div><ul class="footer-links" data-astro-cid-jo6i4kqk><li data-astro-cid-jo6i4kqk><a href="https://github.com/witguang" rel="me noopener" target="_blank" data-astro-cid-jo6i4kqk>GitHub</a></li><li data-astro-cid-jo6i4kqk><a href="https://x.com/wit_guang" rel="me noopener" target="_blank" data-astro-cid-jo6i4kqk>X</a></li><li data-astro-cid-jo6i4kqk><a href="mailto:guangwit@gmail.com" rel="me noopener" data-astro-cid-jo6i4kqk>邮件</a></li><li data-astro-cid-jo6i4kqk><a href="/sharks/" data-astro-cid-jo6i4kqk>鲨鱼</a></li><li data-astro-cid-jo6i4kqk><a href="/rss.xml" data-astro-cid-jo6i4kqk>RSS</a></li></ul><div class="footer-meta" data-astro-cid-jo6i4kqk><span data-astro-cid-jo6i4kqk>© 2026 witguang</span><span class="sep" data-astro-cid-jo6i4kqk>·</span><span data-astro-cid-jo6i4kqk>用 Astro 构建</span><!-- 备案后在这里加：<a href="https://beian.miit.gov.cn/">京ICP备xxxxxxx号</a> --></div></div></footer></body></html>
